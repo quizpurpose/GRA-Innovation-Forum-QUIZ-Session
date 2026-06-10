@@ -393,6 +393,9 @@ canvas#fc{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none
       <!-- Final leaderboard — visible to ALL -->
       <div class="flb-box">
         <div class="flb-head">🏆 Final Leaderboard — Room <span id="res-room-code" style="color:var(--blue2);letter-spacing:.1em"></span></div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:.65rem;padding:7px 10px;background:rgba(79,142,247,.06);border-radius:8px;border:1px solid rgba(79,142,247,.12)">
+          🏅 <b style="color:var(--blue2)">Tiebreaker:</b> Equal scores → fastest total answer time wins. ⏱ shown per player.
+        </div>
         <div id="flb"></div>
       </div>
 
@@ -757,7 +760,25 @@ function updateTimerUI(tnumId,tbarId,iconId){
 }
 
 /* LB RENDER */
-function sortP(p){return[...p].sort((a,b)=>{if((b.score||0)!==(a.score||0))return(b.score||0)-(a.score||0);return(a.elapsed||99999)-(b.elapsed||99999);});}
+function getTotalAnswerTime(p){
+  // Sum only the time spent actually answering questions (not waiting between)
+  let total=0;
+  for(let i=0;i<TOTAL;i++){const t=p[`q${i}_time`];if(t&&t>0)total+=t;}
+  return total>0?total:(p.elapsed||999999);
+}
+function sortP(p){return[...p].sort((a,b)=>{
+  if((b.score||0)!==(a.score||0))return(b.score||0)-(a.score||0);
+  // Tiebreaker: total answer time (less time = winner)
+  return getTotalAnswerTime(a)-getTotalAnswerTime(b);
+});}
+function fmtAnswerTime(p){
+  const t=getTotalAnswerTime(p);
+  if(!t||t===999999)return'—';
+  const s=(t/1000);
+  if(s<60)return s.toFixed(1)+'s';
+  const m=Math.floor(s/60),rem=(s%60).toFixed(1);
+  return m+'m '+rem+'s';
+}
 function updateAnsweredCount(players){
   const done=players.filter(r=>r.qDone>=(cur+1)).length;
   const ac=document.getElementById('acnt');if(ac)ac.textContent=`${done}/${players.length} answered`;
@@ -768,9 +789,12 @@ function renderLB(players,cId){
   el.innerHTML='';
   sorted.forEach((r,i)=>{
     const isMe=r.uid===uid,rank=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
-    const prog=r.done?`<span style="font-size:10px;color:var(--muted)">${fmtTRound(r.elapsed)}</span>`:`<span class="lb-prog">Q${r.qDone||0}/${TOTAL}</span>`;
+    const timeStr=fmtAnswerTime(r);
+    const prog=r.done
+      ?`<div style="text-align:right"><div style="font-size:13px;font-weight:800;color:var(--gold)">${r.score||0}</div><div style="font-size:10px;color:var(--blue2);font-weight:600">⏱ ${timeStr}</div></div>`
+      :`<div style="text-align:right"><div style="font-size:13px;font-weight:800;color:var(--gold)">${r.score||0}</div><span class="lb-prog">Q${r.qDone||0}/${TOTAL}</span></div>`;
     const d=document.createElement('div');d.className='lb-row';
-    d.innerHTML=`<div class="lb-rank">${rank}</div><div class="lb-av" style="background:${avC(r.name)};color:#fff">${ini(r.name)}</div><div class="lb-name${isMe?' you':''}">${r.name}${isMe?' ★':''}</div>${prog}<div class="lb-score${(r.score||0)===0?' z':''}">${r.score||0}</div>`;
+    d.innerHTML=`<div class="lb-rank">${rank}</div><div class="lb-av" style="background:${avC(r.name)};color:#fff">${ini(r.name)}</div><div class="lb-name${isMe?' you':''}">${r.name}${isMe?' ★':''}</div>${prog}`;
     el.appendChild(d);
   });
 }
@@ -781,7 +805,9 @@ function renderFinalLB(players){
   sorted.forEach((r,i)=>{
     const isMe=r.uid===uid,rank=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
     const d=document.createElement('div');d.className='flb-row';
-    d.innerHTML=`<div style="width:22px;text-align:center;font-size:13px">${rank}</div><div style="width:26px;height:26px;border-radius:50%;background:${avC(r.name)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${ini(r.name)}</div><div style="flex:1;font-size:13px;font-weight:500;color:${isMe?'var(--blue2)':'var(--text)'}">${r.name}${isMe?' (you)':''}</div><div style="text-align:right"><div style="font-size:14px;font-weight:800;color:var(--gold);font-family:'Sora',sans-serif">${r.score||0}</div><div style="font-size:10px;color:var(--muted)">${fmtTRound(r.elapsed)}</div></div>`;
+    const ats=fmtAnswerTime(r);
+    const isTied=sorted.filter(x=>(x.score||0)===(r.score||0)).length>1;
+    d.innerHTML=`<div style="width:22px;text-align:center;font-size:13px">${rank}</div><div style="width:28px;height:28px;border-radius:50%;background:${avC(r.name)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${ini(r.name)}</div><div style="flex:1;font-size:13px;font-weight:500;color:${isMe?'var(--blue2)':'var(--text)'};padding:0 6px">${r.name}${isMe?' (you)':''}</div><div style="text-align:right;min-width:80px"><div style="font-size:15px;font-weight:800;color:var(--gold);font-family:'Sora',sans-serif">${r.score||0}</div><div style="font-size:10px;color:var(--blue2);font-weight:600;white-space:nowrap">⏱ ${ats}</div></div>`;
     el.appendChild(d);
   });
 }
@@ -859,3 +885,4 @@ window.downloadExcel=function(){
 </script>
 </body>
 </html>
+
