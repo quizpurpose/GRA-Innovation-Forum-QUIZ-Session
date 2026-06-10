@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💡 GRA BLR Innovation Forum Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08090f;--bg2:#0f1018;--card:#13141f;--card2:#1a1b28;
+  --border:#1e1f2e;--border2:#272838;
+  --blue:#4f8ef7;--blue2:#7eb3ff;--blue3:#1a3a7a;
+  --purple:#7c6af0;--purple2:#a78bfa;--purple3:#2d1f6e;
+  --gold:#f5a623;--gold2:#ffcc55;--gold3:#c47a00;
+  --green:#00e676;--green2:#00c853;
+  --cyan:#00d4ff;--cyan2:#00a8cc;
+  --text:#f0eff8;--muted:#8889a8;--dim:#3a3b52;--red:#ff5252;
+  --accent:#4f8ef7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100vh;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);overflow-x:hidden}
+canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+canvas#fc{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:60;display:none}
+#app{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column}.screen.active{display:flex}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.4rem;background:rgba(8,9,15,.95);border-bottom:1px solid rgba(79,142,247,.15);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px}
+.brand-logo{width:38px;height:38px;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center}
+.bulb-logo{width:32px;height:38px}
+.btext .sup{font-size:9px;letter-spacing:.2em;color:rgba(79,142,247,.6);text-transform:uppercase}
+.btext .nm{font-family:'Sora',sans-serif;font-size:14px;font-weight:700;color:var(--text);line-height:1.2}
+.lchip{display:flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.22);border-radius:999px;font-size:10px;color:var(--green);font-weight:600}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:glow 1.5s ease infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(0,230,118,.5)}50%{box-shadow:0 0 0 4px rgba(0,230,118,0)}}
+
+/* ── LOBBY ── */
+#lobby{align-items:center;justify-content:center}
+.lobby-inner{width:100%;max-width:540px;padding:1.5rem 1.2rem;display:flex;flex-direction:column;align-items:center}
+
+/* Hero bulb logo */
+.hero-bulb-wrap{position:relative;width:120px;height:140px;margin:0 auto 1.5rem;display:flex;align-items:center;justify-content:center}
+.hero-bulb-glow{position:absolute;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(79,142,247,.35) 0%,rgba(79,142,247,.1) 50%,transparent 70%);animation:heroGlow 2s ease-in-out infinite}
+@keyframes heroGlow{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.3);opacity:1}}
+.hero-bulb-svg{position:relative;z-index:1;filter:drop-shadow(0 0 20px rgba(79,142,247,.8));animation:heroBulbPulse 2s ease-in-out infinite}
+@keyframes heroBulbPulse{0%,100%{filter:drop-shadow(0 0 20px rgba(79,142,247,.8))}50%{filter:drop-shadow(0 0 40px rgba(79,142,247,1)) drop-shadow(0 0 80px rgba(124,106,240,.5))}}
+.rays{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;height:160px;animation:spinRays 8s linear infinite}
+@keyframes spinRays{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+.ray{position:absolute;top:50%;left:50%;width:2px;height:30px;background:linear-gradient(to top,rgba(79,142,247,.6),transparent);transform-origin:bottom center;border-radius:999px}
+
+.lobby-title{font-family:'Sora',sans-serif;font-size:28px;font-weight:800;text-align:center;line-height:1.2;margin-bottom:.4rem}
+.lobby-title .t1{color:var(--text)}
+.lobby-title .t2{background:linear-gradient(90deg,var(--blue),var(--purple2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.lobby-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:.4rem;letter-spacing:.04em}
+.lobby-date{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);border-radius:999px;font-size:11px;color:var(--blue2);font-weight:600;margin-bottom:1.8rem;letter-spacing:.06em}
+
+.host-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:18px;background:linear-gradient(135deg,var(--blue),#3a6fd4);color:#fff;border:none;border-radius:16px;font-size:17px;font-weight:800;font-family:'Sora',sans-serif;cursor:pointer;outline:none;opacity:1;visibility:visible;box-shadow:0 4px 32px rgba(79,142,247,.45);letter-spacing:.02em;transition:opacity .15s,transform .1s;margin-bottom:.75rem}
+.host-btn:hover{opacity:.92;transform:translateY(-2px)}
+.join-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:18px;background:linear-gradient(135deg,var(--purple),#5b4fd4);color:#fff;border:none;border-radius:16px;font-size:17px;font-weight:800;font-family:'Sora',sans-serif;cursor:pointer;outline:none;opacity:1;visibility:visible;box-shadow:0 4px 32px rgba(124,106,240,.4);letter-spacing:.02em;transition:opacity .15s,transform .1s}
+.join-btn:hover{opacity:.92;transform:translateY(-2px)}
+.divider{display:flex;align-items:center;gap:12px;width:100%;margin:1.1rem 0}
+.divider-line{flex:1;height:1px;background:var(--border2)}
+.divider-text{font-size:11px;color:var(--dim);white-space:nowrap;letter-spacing:.06em}
+.linput{width:100%;padding:14px 18px;font-size:15px;border:1.5px solid var(--border2);border-radius:13px;background:var(--bg2);color:var(--text);outline:none;font-family:'DM Sans',sans-serif;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;margin-bottom:.7rem}
+.linput:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,.12)}
+.linput::placeholder{color:var(--dim)}.linput.err{border-color:var(--red)}
+.code-inp{text-transform:uppercase;letter-spacing:.25em;font-size:20px;font-weight:700;font-family:'Sora',sans-serif;text-align:center}
+.errmsg{font-size:12px;color:var(--red);margin:-6px 0 .6rem;display:none;text-align:center}
+.host-box{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:1.4rem;margin-bottom:1rem;display:none}
+.hbox-title{font-family:'Sora',sans-serif;font-size:16px;font-weight:700;margin-bottom:.25rem;color:var(--text)}
+.hbox-sub{font-size:12px;color:var(--muted);margin-bottom:.9rem}
+.create-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:linear-gradient(135deg,var(--blue),#3a6fd4);color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:700;font-family:'Sora',sans-serif;cursor:pointer;outline:none;opacity:1;visibility:visible}
+.create-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── WAITING ── */
+#waiting{align-items:center;justify-content:flex-start}
+.wait-inner{width:100%;max-width:560px;padding:1.5rem 1.2rem}
+.code-card{background:var(--card);border:2px solid rgba(79,142,247,.4);border-radius:20px;padding:1.5rem;text-align:center;margin-bottom:1.1rem;box-shadow:0 0 40px rgba(79,142,247,.1)}
+.code-label{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+.big-code{font-family:'Sora',sans-serif;font-size:52px;font-weight:800;color:var(--blue2);letter-spacing:.3em;text-shadow:0 0 30px rgba(79,142,247,.6);margin-bottom:.5rem}
+.code-hint{font-size:13px;color:var(--muted)}
+.copy-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.28);border-radius:9px;font-size:12px;color:var(--blue2);font-weight:600;cursor:pointer;outline:none;margin-top:.7rem;font-family:'DM Sans',sans-serif;transition:background .15s}
+.copy-btn:hover{background:rgba(79,142,247,.2)}
+.players-card{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:1.2rem;margin-bottom:1.1rem}
+.players-head{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem;display:flex;align-items:center;justify-content:space-between}
+.prow{display:flex;align-items:center;gap:10px;padding:8px 0}.prow+.prow{border-top:1px solid var(--border)}
+.pav{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.pnm{font-size:14px;font-weight:500;flex:1}
+.host-tag{font-size:10px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.25);color:var(--blue2);padding:2px 8px;border-radius:999px;font-weight:600}
+.ready-tag{font-size:10px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);color:var(--green);padding:2px 8px;border-radius:999px;font-weight:600}
+.start-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;background:linear-gradient(135deg,var(--green),var(--green2));color:#031a08;border:none;border-radius:14px;font-size:16px;font-weight:800;font-family:'Sora',sans-serif;cursor:pointer;outline:none;opacity:1;visibility:visible;box-shadow:0 4px 28px rgba(0,230,118,.35);letter-spacing:.02em}
+.start-btn:hover{opacity:.9}
+.wait-hint{font-size:12px;color:var(--dim);text-align:center;margin-top:.65rem}
+.join-status{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.18);border-radius:999px;font-size:12px;color:var(--green);margin-bottom:.9rem}
+
+/* ── HOST QUESTION CONTROL ── */
+#question{align-items:stretch}
+.q-layout{display:grid;grid-template-columns:1fr 300px;flex:1;min-height:0}
+.q-main{padding:.7rem 1.4rem 1.4rem;overflow-y:auto;background:rgba(8,9,15,.7);backdrop-filter:blur(10px)}
+.q-side{padding:.8rem 1rem;background:rgba(10,11,18,.85);border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;gap:.75rem}
+
+.dot-row{display:flex;align-items:center;justify-content:center;gap:6px;padding:.6rem 0 .8rem}
+.dp{width:9px;height:9px;border-radius:50%;background:var(--border2);transition:all .3s}
+.dp.done{background:var(--blue)}.dp.current{background:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,.25);transform:scale(1.3)}.dp.wrong{background:var(--red)}
+.qmeta{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+.qcat{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);font-size:11px;font-weight:700;color:var(--blue2);text-transform:uppercase;letter-spacing:.08em;font-family:'Sora',sans-serif}
+.qcnt{font-size:12px;color:var(--muted);font-weight:500}
+.tnum{font-size:22px;font-weight:800;font-family:'Sora',sans-serif;min-width:44px;text-align:right;transition:color .3s}
+.tnum.ok{color:var(--green)}.tnum.warn{color:var(--gold)}.tnum.danger{color:var(--red)}
+
+/* Timer bar with bulb */
+.tbar-outer{position:relative;height:20px;margin-bottom:1.2rem;display:flex;align-items:center}
+.tbar-track{position:absolute;left:0;right:0;height:6px;background:var(--border);border-radius:999px;overflow:hidden}
+.tbar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .95s linear,background .3s;box-shadow:0 0 10px rgba(79,142,247,.5)}
+.tbar-fill.warn{background:linear-gradient(90deg,var(--gold),#ffaa00);box-shadow:0 0 10px rgba(245,166,35,.5)}
+.tbar-fill.danger{background:linear-gradient(90deg,var(--red),#ff8080);box-shadow:0 0 10px rgba(255,82,82,.5)}
+.tbar-icon{position:absolute;top:50%;transform:translateY(-50%);transition:left .95s linear;z-index:2;pointer-events:none;font-size:18px;line-height:1;animation:bulbBob .5s ease-in-out infinite alternate}
+@keyframes bulbBob{from{transform:translateY(-55%)}to{transform:translateY(-45%)}}
+
+.qtxt{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:1.1rem;line-height:1.55}
+.opts{display:grid;gap:9px;margin-bottom:1rem}
+.opt{display:flex;align-items:center;gap:11px;width:100%;padding:13px 15px;background:var(--card);border:1.5px solid var(--border2);border-radius:13px;cursor:pointer;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;text-align:left;outline:none;-webkit-appearance:none;opacity:1;visibility:visible;transition:border-color .15s,background .15s,transform .1s}
+.opt:hover:not(:disabled){background:var(--card2);transform:translateX(3px)}
+.opt:disabled{cursor:default;pointer-events:none}
+.opt.correct{border-color:var(--green)!important;background:rgba(0,230,118,.07)!important}
+.opt.wrong{opacity:.25!important}.opt.reveal{border-color:rgba(0,230,118,.35)!important;background:rgba(0,230,118,.04)!important}
+.oletter{width:30px;height:30px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:var(--muted);font-family:'Sora',sans-serif;transition:all .15s}
+.opt.correct .oletter{border-color:var(--green)!important;color:var(--green)!important;background:rgba(0,230,118,.08)!important}
+.opt.reveal .oletter{border-color:var(--green2)!important;color:var(--green2)!important}
+.otext{font-size:14px;color:var(--text);flex:1;opacity:1;visibility:visible}
+.expl{background:var(--card);border-left:3px solid var(--blue);border-radius:0 11px 11px 0;padding:9px 13px;font-size:12px;color:var(--muted);line-height:1.65;display:none;margin-bottom:.8rem}
+.bot-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem}
+.ans-count{font-size:12px;color:var(--muted)}
+
+/* Host control panel */
+.host-ctrl{background:var(--card);border:1px solid rgba(79,142,247,.2);border-radius:14px;padding:1rem}
+.ctrl-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue2);margin-bottom:.65rem;display:flex;align-items:center;gap:6px}
+.next-q-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:linear-gradient(135deg,var(--blue),#3a6fd4);border:none;border-radius:11px;font-size:14px;font-weight:700;color:#fff;font-family:'Sora',sans-serif;cursor:pointer;outline:none;opacity:1;visibility:visible;box-shadow:0 3px 16px rgba(79,142,247,.4);transition:opacity .15s}
+.next-q-btn:hover{opacity:.9}
+.next-q-btn:disabled{opacity:.35;cursor:not-allowed}
+.reveal-q-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:transparent;border:1.5px solid rgba(124,106,240,.4);border-radius:11px;font-size:13px;font-weight:600;color:var(--purple2);font-family:'Sora',sans-serif;cursor:pointer;outline:none;opacity:1;visibility:visible;margin-bottom:.6rem;transition:background .15s}
+.reveal-q-btn:hover{background:rgba(124,106,240,.1)}
+
+/* Side leaderboard */
+.lb-box{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:.9rem 1rem;flex:1}
+.lb-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.65rem;display:flex;align-items:center;gap:6px}
+.lb-row{display:flex;align-items:center;gap:8px;padding:5px 0}.lb-row+.lb-row{border-top:1px solid var(--border)}
+.lb-rank{width:20px;text-align:center;font-size:12px;flex-shrink:0}
+.lb-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.lb-name{flex:1;font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-name.you{color:var(--blue2)}
+.lb-score{font-size:13px;font-weight:800;color:var(--gold);font-family:'Sora',sans-serif}
+.lb-score.z{color:var(--dim)}
+.lb-prog{font-size:9px;color:var(--gold);background:rgba(245,166,35,.07);padding:1px 6px;border-radius:999px;border:1px solid rgba(245,166,35,.18)}
+
+/* Participant question view (no controls) */
+.p-qtxt{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:1.1rem;line-height:1.55}
+.waiting-q-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:1rem;padding:2rem}
+.wq-bulb{font-size:64px;animation:bulbPulse 1.5s ease-in-out infinite}
+@keyframes bulbPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+.wq-txt{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:var(--muted);text-align:center}
+.wq-sub{font-size:13px;color:var(--dim);text-align:center}
+
+/* RESULTS */
+.rwrap{width:100%;max-width:640px;margin:0 auto;padding:1.2rem 1.2rem 2rem;flex:1;display:flex;flex-direction:column}
+.score-ring{width:130px;height:130px;border-radius:50%;border:4px solid var(--blue);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:1rem auto 1.2rem;background:rgba(79,142,247,.05);box-shadow:0 0 30px rgba(79,142,247,.2)}
+.rscore{font-family:'Sora',sans-serif;font-size:40px;font-weight:800;color:var(--blue2);line-height:1}
+.rsub2{font-size:11px;color:var(--muted);margin-top:2px}
+.rname-r{font-family:'Sora',sans-serif;font-size:20px;font-weight:700;text-align:center;margin-bottom:.35rem}
+.rverdict{font-size:13px;color:var(--muted);text-align:center;margin-bottom:1.3rem;line-height:1.6}
+.rstats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:1.2rem}
+.rstat{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:.85rem;text-align:center}
+.rsn{font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--blue2)}
+.rsl{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+.flb-box{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:1rem 1.2rem;margin-bottom:1.1rem}
+.flb-head{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem}
+.flb-row{display:flex;align-items:center;gap:10px;padding:7px 0}.flb-row+.flb-row{border-top:1px solid var(--border)}
+
+/* Excel download — host only */
+.excel-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:14px;background:linear-gradient(135deg,#1a6b3a,#0d4a26);border:1px solid rgba(0,230,118,.3);border-radius:13px;font-size:14px;font-weight:700;color:#00e676;font-family:'Sora',sans-serif;cursor:pointer;outline:none;opacity:1;visibility:visible;box-shadow:0 3px 18px rgba(0,230,118,.2);margin-bottom:.75rem;transition:opacity .15s}
+.excel-btn:hover{opacity:.9}
+
+.footer{padding:.6rem 1.4rem;text-align:center;font-size:10px;color:var(--dim);border-top:1px solid var(--border);letter-spacing:.05em;text-transform:uppercase;background:rgba(8,9,15,.92);flex-shrink:0}
+@keyframes popIn{0%{transform:scale(.55);opacity:0}65%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.pi{animation:popIn .4s cubic-bezier(.34,1.56,.64,1) both}.fu{animation:fadeUp .3s ease both}
+
+/* Participant question display */
+#pquestion{align-items:stretch}
+.pq-layout{display:grid;grid-template-columns:1fr 280px;flex:1}
+.pq-main{padding:.7rem 1.4rem 1.4rem;overflow-y:auto;background:rgba(8,9,15,.7);backdrop-filter:blur(10px)}
+.pq-side{padding:.8rem 1rem;background:rgba(10,11,18,.85);border-left:1px solid var(--border);overflow-y:auto}
+
+@media(max-width:640px){
+  .q-layout,.pq-layout{grid-template-columns:1fr}
+  .q-side,.pq-side{border-left:none;border-top:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<canvas id="fc"></canvas>
+<div id="app">
+
+<!-- ══ LOBBY ══ -->
+<div id="lobby" class="screen active">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo"><svg class="bulb-logo" viewBox="0 0 32 38" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="14" rx="10" ry="10" fill="url(#bg1)" opacity=".15"/><path d="M16 4C10.477 4 6 8.477 6 14c0 3.6 1.9 6.76 4.75 8.55V26a1 1 0 001 1h8.5a1 1 0 001-1v-3.45C24.1 20.76 26 17.6 26 14c0-5.523-4.477-10-10-10z" fill="url(#bg2)"/><rect x="10.75" y="27" width="10.5" height="2.5" rx="1.25" fill="#4f8ef7" opacity=".8"/><rect x="11.5" y="30.5" width="9" height="2.5" rx="1.25" fill="#4f8ef7" opacity=".6"/><rect x="12.5" y="34" width="7" height="2.5" rx="1.25" fill="#4f8ef7" opacity=".4"/><line x1="16" y1="16" x2="12" y2="22" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".6"/><line x1="16" y1="16" x2="20" y2="22" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".6"/><line x1="16" y1="16" x2="16" y2="23" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".8"/><defs><radialGradient id="bg1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#4f8ef7"/><stop offset="100%" stop-color="#7c6af0"/></radialGradient><linearGradient id="bg2" x1="16" y1="4" x2="16" y2="27" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#7eb3ff"/><stop offset="50%" stop-color="#4f8ef7"/><stop offset="100%" stop-color="#3a5fc4"/></linearGradient></defs></svg></div>
+      <div class="btext"><div class="sup">GRA BLR</div><div class="nm">Innovation Forum Quiz</div></div>
+    </div>
+    <div class="lchip"><div class="ldot"></div>Live</div>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:1.5rem 1.2rem">
+    <div class="lobby-inner">
+      <!-- Animated bulb hero -->
+      <div class="hero-bulb-wrap">
+        <div class="hero-bulb-glow"></div>
+        <div class="rays" id="rays"></div>
+        <svg class="hero-bulb-svg" width="72" height="86" viewBox="0 0 32 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="16" cy="14" rx="12" ry="12" fill="url(#hbg1)" opacity=".2"/>
+          <path d="M16 2C9.373 2 4 7.373 4 14c0 4.2 2.1 7.9 5.3 10.1V28a1.5 1.5 0 001.5 1.5h10.4a1.5 1.5 0 001.5-1.5v-3.9C25.9 21.9 28 18.2 28 14 28 7.373 22.627 2 16 2z" fill="url(#hbg2)"/>
+          <rect x="9.8" y="29.5" width="12.4" height="2.8" rx="1.4" fill="#7eb3ff" opacity=".85"/>
+          <rect x="10.8" y="33.2" width="10.4" height="2.8" rx="1.4" fill="#7eb3ff" opacity=".65"/>
+          <rect x="12" y="36.8" width="8" height="2" rx="1" fill="#7eb3ff" opacity=".4"/>
+          <line x1="16" y1="17" x2="11" y2="25" stroke="white" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
+          <line x1="16" y1="17" x2="21" y2="25" stroke="white" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
+          <line x1="16" y1="17" x2="16" y2="26" stroke="white" stroke-width="1.8" stroke-linecap="round" opacity=".9"/>
+          <circle cx="16" cy="10" r="3" fill="white" opacity=".35"/>
+          <defs>
+            <radialGradient id="hbg1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#4f8ef7"/><stop offset="100%" stop-color="#7c6af0"/></radialGradient>
+            <linearGradient id="hbg2" x1="16" y1="2" x2="16" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#a8d0ff"/><stop offset="40%" stop-color="#4f8ef7"/><stop offset="100%" stop-color="#2a4ab0"/></linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <div class="lobby-title">
+        <div class="t1">GRA BLR</div>
+        <div class="t2">Innovation Forum</div>
+      </div>
+      <div class="lobby-sub">Knowledge Check</div>
+      <div class="lobby-date">📅 June 2026</div>
+
+      <div class="host-box" id="host-box">
+        <div class="hbox-title">🎙️ Host a New Game</div>
+        <div class="hbox-sub">Enter your name to create the room and control the quiz</div>
+        <input class="linput" id="host-name" type="text" placeholder="Your name…" maxlength="40"/>
+        <div class="errmsg" id="host-name-err">Please enter your name.</div>
+        <button class="create-btn" id="create-btn" onclick="confirmHost()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>Create Room
+        </button>
+      </div>
+      <button class="host-btn" id="host-btn-main" onclick="showHostBox()">🎙️ &nbsp;Host a New Game</button>
+      <div class="divider"><div class="divider-line"></div><div class="divider-text">— or join an existing game —</div><div class="divider-line"></div></div>
+      <input class="linput" id="join-name" type="text" placeholder="Your name…" maxlength="40"/>
+      <input class="linput code-inp" id="join-code" type="text" placeholder="6-LETTER ROOM CODE…" maxlength="6"/>
+      <div class="errmsg" id="join-err">Please enter your name and a valid 6-letter room code.</div>
+      <button class="join-btn" id="join-btn-main" onclick="joinGame()">🙋 &nbsp;Join Game</button>
+    </div>
+  </div>
+  <div class="footer">💡 GRA BLR Innovation Forum Quiz · June 2026</div>
+</div>
+
+<!-- ══ WAITING ROOM ══ -->
+<div id="waiting" class="screen">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo"><svg class="bulb-logo" viewBox="0 0 32 38" fill="none"><path d="M16 4C10.477 4 6 8.477 6 14c0 3.6 1.9 6.76 4.75 8.55V26a1 1 0 001 1h8.5a1 1 0 001-1v-3.45C24.1 20.76 26 17.6 26 14c0-5.523-4.477-10-10-10z" fill="url(#tb2)"/><rect x="10.75" y="27" width="10.5" height="2.5" rx="1.25" fill="#4f8ef7" opacity=".8"/><rect x="11.5" y="30.5" width="9" height="2.5" rx="1.25" fill="#4f8ef7" opacity=".6"/><rect x="12.5" y="34" width="7" height="2.5" rx="1.25" fill="#4f8ef7" opacity=".4"/><defs><linearGradient id="tb2" x1="16" y1="4" x2="16" y2="27" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#7eb3ff"/><stop offset="100%" stop-color="#3a5fc4"/></linearGradient></defs></svg></div>
+      <div class="btext"><div class="sup">GRA BLR</div><div class="nm">Innovation Forum Quiz</div></div>
+    </div>
+    <div class="lchip"><div class="ldot"></div>Live</div>
+  </div>
+  <div style="flex:1;display:flex;align-items:flex-start;justify-content:center;padding:1.5rem 1.2rem">
+    <div class="wait-inner">
+      <div class="code-card">
+        <div class="code-label">Room Code — Share with participants</div>
+        <div class="big-code" id="room-code-disp">------</div>
+        <div class="code-hint">Everyone opens the quiz URL and enters this code</div>
+        <button class="copy-btn" onclick="copyCode()">📋 Copy Code &amp; Link</button>
+      </div>
+      <div class="players-card">
+        <div class="players-head"><span>Participants</span><span id="player-count" style="color:var(--blue2);font-family:'Sora',sans-serif;font-weight:700">1 joined</span></div>
+        <div id="player-list"></div>
+      </div>
+      <div id="host-actions">
+        <button class="start-btn" onclick="hostStartGame()">▶️ &nbsp;Start Quiz Now</button>
+        <div class="wait-hint" id="wait-hint">Waiting for participants… Share the room code above!</div>
+      </div>
+      <div id="joiner-actions" style="display:none">
+        <div class="join-status"><div class="ldot"></div>Joined! Waiting for host to start the quiz…</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">💡 GRA BLR Innovation Forum Quiz · June 2026</div>
+</div>
+
+<!-- ══ QUESTION (HOST VIEW) ══ -->
+<div id="question" class="screen">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo"><svg class="bulb-logo" viewBox="0 0 32 38" fill="none"><path d="M16 4C10.477 4 6 8.477 6 14c0 3.6 1.9 6.76 4.75 8.55V26a1 1 0 001 1h8.5a1 1 0 001-1v-3.45C24.1 20.76 26 17.6 26 14c0-5.523-4.477-10-10-10z" fill="url(#qb2)"/><rect x="10.75" y="27" width="10.5" height="2" rx="1" fill="#4f8ef7" opacity=".8"/><rect x="11.5" y="30" width="9" height="2" rx="1" fill="#4f8ef7" opacity=".5"/><defs><linearGradient id="qb2" x1="16" y1="4" x2="16" y2="27" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#7eb3ff"/><stop offset="100%" stop-color="#3a5fc4"/></linearGradient></defs></svg></div>
+      <div class="btext"><div class="nm" style="font-size:13px">Innovation Forum Quiz</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:10px;color:var(--muted);font-family:'Sora',sans-serif">🎙️ HOST · Room: <b style="color:var(--blue2);letter-spacing:.1em" id="topbar-code"></b></span>
+      <div class="lchip"><div class="ldot"></div>Live</div>
+    </div>
+  </div>
+  <div class="q-layout">
+    <!-- Left: question -->
+    <div class="q-main">
+      <div class="dot-row" id="dots"></div>
+      <div class="qmeta">
+        <span class="qcat">💡 Innovation</span>
+        <span class="qcnt" id="qcnt">Q 1 of 10</span>
+        <span class="tnum ok" id="tnum">30s</span>
+      </div>
+      <div class="tbar-outer" id="tbar-outer">
+        <div class="tbar-track"><div class="tbar-fill" id="tbar-fill" style="width:100%"></div></div>
+        <div class="tbar-icon" id="tbar-icon" style="left:calc(100% - 20px)">💡</div>
+      </div>
+      <p class="qtxt" id="qtxt"></p>
+      <div class="opts" id="opts"></div>
+      <div class="expl" id="expl"></div>
+      <div class="bot-row">
+        <span class="ans-count" id="acnt">0/0 answered</span>
+      </div>
+    </div>
+    <!-- Right: host controls + leaderboard -->
+    <div class="q-side">
+      <div class="host-ctrl">
+        <div class="ctrl-label">🎙️ Host Controls</div>
+        <button class="reveal-q-btn" id="reveal-btn" onclick="hostReveal()">👁️ Reveal Answer</button>
+        <button class="next-q-btn" id="next-btn" onclick="hostNext()" disabled>Next Question →</button>
+      </div>
+      <div class="lb-box">
+        <div class="lb-label"><div class="ldot"></div>Live Leaderboard</div>
+        <div id="qlb"><div style="text-align:center;padding:.75rem;font-size:12px;color:var(--dim)">Waiting...</div></div>
+        <div style="font-size:10px;color:var(--dim);text-align:center;margin-top:.4rem;display:flex;align-items:center;justify-content:center;gap:4px"><div class="ldot" style="width:5px;height:5px"></div>Updates live</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">💡 GRA BLR Innovation Forum Quiz · June 2026</div>
+</div>
+
+<!-- ══ QUESTION (PARTICIPANT VIEW) ══ -->
+<div id="pquestion" class="screen">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo"><svg class="bulb-logo" viewBox="0 0 32 38" fill="none"><path d="M16 4C10.477 4 6 8.477 6 14c0 3.6 1.9 6.76 4.75 8.55V26a1 1 0 001 1h8.5a1 1 0 001-1v-3.45C24.1 20.76 26 17.6 26 14c0-5.523-4.477-10-10-10z" fill="url(#pb2)"/><rect x="10.75" y="27" width="10.5" height="2" rx="1" fill="#4f8ef7" opacity=".8"/><rect x="11.5" y="30" width="9" height="2" rx="1" fill="#4f8ef7" opacity=".5"/><defs><linearGradient id="pb2" x1="16" y1="4" x2="16" y2="27" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#7eb3ff"/><stop offset="100%" stop-color="#3a5fc4"/></linearGradient></defs></svg></div>
+      <div class="btext"><div class="nm" style="font-size:13px">Innovation Forum Quiz</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:10px;color:var(--muted)">Room: <b style="color:var(--blue2);letter-spacing:.1em" id="ptopbar-code"></b></span>
+      <div class="lchip"><div class="ldot"></div>Live</div>
+    </div>
+  </div>
+  <div class="pq-layout">
+    <div class="pq-main" id="pq-main">
+      <!-- filled dynamically: waiting state or question -->
+    </div>
+    <div class="pq-side">
+      <div class="lb-box" style="border-radius:14px;padding:.9rem 1rem">
+        <div class="lb-label"><div class="ldot"></div>Live Leaderboard</div>
+        <div id="pqlb"><div style="text-align:center;padding:.75rem;font-size:12px;color:var(--dim)">Waiting...</div></div>
+        <div style="font-size:10px;color:var(--dim);text-align:center;margin-top:.4rem;display:flex;align-items:center;justify-content:center;gap:4px"><div class="ldot" style="width:5px;height:5px"></div>Updates live</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">💡 GRA BLR Innovation Forum Quiz · June 2026</div>
+</div>
+
+<!-- ══ RESULTS ══ -->
+<div id="results" class="screen">
+  <div class="topbar" style="position:relative;z-index:6">
+    <div class="brand">
+      <div class="brand-logo"><svg class="bulb-logo" viewBox="0 0 32 38" fill="none"><path d="M16 4C10.477 4 6 8.477 6 14c0 3.6 1.9 6.76 4.75 8.55V26a1 1 0 001 1h8.5a1 1 0 001-1v-3.45C24.1 20.76 26 17.6 26 14c0-5.523-4.477-10-10-10z" fill="url(#rb2)"/><rect x="10.75" y="27" width="10.5" height="2" rx="1" fill="#4f8ef7" opacity=".8"/><defs><linearGradient id="rb2" x1="16" y1="4" x2="16" y2="27" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#7eb3ff"/><stop offset="100%" stop-color="#3a5fc4"/></linearGradient></defs></svg></div>
+      <div class="btext"><div class="nm" style="font-size:13px">Innovation Forum Quiz</div></div>
+    </div>
+    <div class="lchip"><div class="ldot"></div>Live</div>
+  </div>
+  <div style="flex:1;display:flex;align-items:flex-start;justify-content:center;padding:1rem 1.2rem 2rem;position:relative;z-index:6">
+    <div class="rwrap">
+      <div style="display:flex;justify-content:center;padding:.8rem 0 .4rem">
+        <div style="display:inline-flex;align-items:center;gap:7px;padding:7px 18px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.28);border-radius:999px;font-size:12px;font-weight:700;color:var(--blue2);letter-spacing:.06em;text-transform:uppercase;font-family:'Sora',sans-serif">🏆 Quiz Complete!</div>
+      </div>
+      <div class="score-ring pi"><div class="rscore" id="rscore">0</div><div class="rsub2">/ 1000</div></div>
+      <div class="rname-r fu" id="rname"></div>
+      <div class="rverdict fu" id="rverdict"></div>
+      <div class="rstats" id="rstats"></div>
+
+      <!-- Final leaderboard — visible to ALL -->
+      <div class="flb-box">
+        <div class="flb-head">🏆 Final Leaderboard — Room <span id="res-room-code" style="color:var(--blue2);letter-spacing:.1em"></span></div>
+        <div id="flb"></div>
+      </div>
+
+      <!-- Excel removed -->
+      <div id="excel-section" style="display:none!important;margin-bottom:.75rem">
+        <button class="excel-btn" onclick="downloadExcel()">
+          📊 Download Excel Report (Host Only)
+        </button>
+        <div style="font-size:11px;color:var(--dim);text-align:center">Shows each player's answer time per question</div>
+      </div>
+
+      <button onclick="goHome()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:var(--card);border:1.5px solid var(--border2);border-radius:13px;font-size:14px;font-weight:600;color:var(--text);font-family:'Sora',sans-serif;cursor:pointer;outline:none;opacity:1;visibility:visible">🏠 Back to Home</button>
+    </div>
+  </div>
+  <div class="footer" style="position:relative;z-index:6">💡 GRA BLR Innovation Forum Quiz · June 2026</div>
+</div>
+
+</div><!-- #app -->
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  authDomain: "gra-cmc-rde-hive-quizzzz.firebaseapp.com",
+  databaseURL: "https://gra-cmc-rde-hive-quizzzz-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "gra-cmc-rde-hive-quizzzz",
+  appId: "1:216311466941:web:f498a9ba685c2014c1e0d4"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+function roomRef(code){return ref(db,`inno_rooms/${code}`);}
+function playerRef(code,uid){return ref(db,`inno_rooms/${code}/players/${uid}`);}
+async function createRoom(code,data){await set(roomRef(code),data);}
+async function getRoom(code){const s=await get(roomRef(code));return s.exists()?s.val():null;}
+async function upPlayer(code,uid,data){await update(playerRef(code,uid),data);}
+async function upRoom(code,data){await update(roomRef(code),data);}
+function listenRoom(code,cb){return onValue(roomRef(code),s=>{cb(s.exists()?s.val():null);});}
+window._fb={createRoom,getRoom,upPlayer,upRoom,listenRoom};
+
+/* ════ INNOVATION BG — floating light particles + grid ════ */
+const bgC=document.getElementById('bg'),bctx=bgC.getContext('2d');
+let W,H;
+function rsz(){W=bgC.width=window.innerWidth;H=bgC.height=window.innerHeight;}
+rsz();window.addEventListener('resize',rsz);
+
+// Build rays for hero
+const raysEl=document.getElementById('rays');
+if(raysEl){for(let i=0;i<12;i++){const r=document.createElement('div');r.className='ray';r.style.transform=`rotate(${i*30}deg) translateX(-50%)`;r.style.height=(20+Math.random()*20)+'px';r.style.opacity=(.3+Math.random()*.4).toFixed(2);raysEl.appendChild(r);}}
+
+const particles=[];
+for(let i=0;i<80;i++){particles.push({x:Math.random()*2000,y:Math.random()*2000,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:.5+Math.random()*2,a:Math.random()*.6+.1,pulse:Math.random()*Math.PI*2,col:Math.random()<.5?'#4f8ef7':Math.random()<.5?'#7c6af0':'#00d4ff'});}
+const gridLines=[];
+for(let x=0;x<2000;x+=80)gridLines.push({x,type:'v'});
+for(let y=0;y<2000;y+=80)gridLines.push({y,type:'h'});
+let bgT=0;
+function bgLoop(){bgT++;bctx.clearRect(0,0,W,H);
+// deep bg
+const grad=bctx.createRadialGradient(W*.3,H*.3,0,W*.5,H*.5,Math.max(W,H)*.8);
+grad.addColorStop(0,'#0d0f1f');grad.addColorStop(.5,'#08090f');grad.addColorStop(1,'#05060c');
+bctx.fillStyle=grad;bctx.fillRect(0,0,W,H);
+// grid
+bctx.save();bctx.globalAlpha=.06;bctx.strokeStyle='#4f8ef7';bctx.lineWidth=.5;
+gridLines.forEach(l=>{bctx.beginPath();if(l.type==='v'){bctx.moveTo(l.x,0);bctx.lineTo(l.x,H);}else{bctx.moveTo(0,l.y);bctx.lineTo(W,l.y);}bctx.stroke();});
+bctx.restore();
+// particles
+particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;p.pulse+=.02;const a=p.a*(.5+.5*Math.sin(p.pulse));bctx.save();bctx.globalAlpha=a;bctx.fillStyle=p.col;bctx.shadowColor=p.col;bctx.shadowBlur=6;bctx.beginPath();bctx.arc(p.x,p.y,p.r,0,Math.PI*2);bctx.fill();bctx.restore();});
+// floating bulbs
+const nb=4;for(let i=0;i<nb;i++){const t=bgT*.005+i*(Math.PI*2/nb);const x=W/2+Math.cos(t)*W*.35;const y=H/2+Math.sin(t*1.3)*H*.3;const a=.04+.03*Math.sin(bgT*.02+i);bctx.save();bctx.globalAlpha=a;bctx.font='28px serif';bctx.textAlign='center';bctx.textBaseline='middle';bctx.fillText('💡',x,y);bctx.restore();}
+requestAnimationFrame(bgLoop);}
+requestAnimationFrame(bgLoop);
+
+/* FIREWORKS */
+function fireworks(){const cv=document.getElementById('fc');cv.style.display='block';cv.width=W;cv.height=H;const c=cv.getContext('2d'),parts=[],rockets=[];const cols=['#4f8ef7','#7eb3ff','#7c6af0','#a78bfa','#00d4ff','#fff'];function burst(x,y,col){for(let i=0;i<55;i++){const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*5;parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:1.5+Math.random()*2.5,col,life:1,decay:.013+Math.random()*.02});}for(let i=0;i<15;i++){const a=(i/15)*Math.PI*2;parts.push({x,y,vx:Math.cos(a)*2.5,vy:Math.sin(a)*2.5,r:2,col:'#fff',life:.7,decay:.022});}}function spawn(){rockets.push({x:80+Math.random()*(W-160),y:H-10,vy:-(6+Math.random()*4),vx:(Math.random()-.5)*1.5,ty:40+Math.random()*(H*.4),done:false,trail:[],col:cols[Math.floor(Math.random()*cols.length)]});}let fired=0;function fire(){if(fired<8){spawn();fired++;setTimeout(fire,300+Math.random()*200);}}fire();function draw(){c.fillStyle='rgba(8,9,15,.18)';c.fillRect(0,0,W,H);rockets.forEach((r,i)=>{if(r.done){rockets.splice(i,1);return;}r.x+=r.vx;r.y+=r.vy;r.trail.push({x:r.x,y:r.y});if(r.trail.length>12)r.trail.shift();r.trail.forEach((p,j)=>{c.globalAlpha=(j/r.trail.length)*.5;c.fillStyle=r.col;c.beginPath();c.arc(p.x,p.y,1.4,0,Math.PI*2);c.fill();});c.globalAlpha=1;c.fillStyle=r.col;c.beginPath();c.arc(r.x,r.y,3,0,Math.PI*2);c.fill();if(r.y<=r.ty){r.done=true;burst(r.x,r.y,r.col);}});for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.08;p.vx*=.97;p.life-=p.decay;if(p.life<=0){parts.splice(i,1);continue;}c.globalAlpha=p.life;c.fillStyle=p.col;c.beginPath();c.arc(p.x,p.y,p.r,0,Math.PI*2);c.fill();}c.globalAlpha=1;if(rockets.length||parts.length||fired<8)requestAnimationFrame(draw);else setTimeout(()=>{c.clearRect(0,0,W,H);cv.style.display='none';},300);}draw();}
+
+/* AUDIO */
+let aCtx=null;
+function getACtx(){if(!aCtx)aCtx=new(window.AudioContext||window.webkitAudioContext)();if(aCtx.state==='suspended')aCtx.resume();return aCtx;}
+function fanfare(){try{const c=getACtx(),now=c.currentTime+.05;[[523.25,0,.18,.22],[659.25,.1,.18,.22],[783.99,.2,.18,.22],[1046.5,.3,.35,.28],[523.25,.36,.5,.15],[783.99,.36,.5,.17],[1318.51,.75,.5,.26]].forEach(([f,st,d,v])=>{const o=c.createOscillator(),g=c.createGain(),lp=c.createBiquadFilter();o.type='triangle';o.frequency.value=f;lp.type='lowpass';lp.frequency.value=4000;g.gain.setValueAtTime(0,now+st);g.gain.linearRampToValueAtTime(v,now+st+.04);g.gain.exponentialRampToValueAtTime(.001,now+st+d);o.connect(lp);lp.connect(g);g.connect(c.destination);o.start(now+st);o.stop(now+st+d+.05);});}catch(e){}}
+function beep(ok){try{const c=getACtx(),now=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=ok?880:220;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(.15,now+.02);g.gain.exponentialRampToValueAtTime(.001,now+.25);o.connect(g);g.connect(c.destination);o.start(now);o.stop(now+.3);}catch(e){}}
+
+/* ════ QUESTIONS ════ */
+const QS=[
+  {q:"When was Orforglipron (Foundayo) approved in the U.S.?",opts:["March 1, 2026","March 27, 2026","April 1, 2026","April 10, 2026"],ans:2,exp:"Orforglipron (Foundayo) received U.S. FDA approval on April 1, 2026, marking a significant milestone as the first oral non-peptide GLP-1 receptor agonist."},
+  {q:"Lilly's next-generation obesity drug, retatrutide, is a triple agonist. Which three receptors does it target?",opts:["GLP-1, GIP, and glucagon","GLP-1, GCG, and insulin","GIP, FGF21, and GLP-1","GLP-1, leptin, and GIP"],ans:0,exp:"Retatrutide is a triple agonist targeting GLP-1, GIP, and glucagon receptors, offering a novel mechanism for obesity treatment."},
+  {q:"Ebglyss (lebrikizumab) targets which interleukin to treat moderate-to-severe atopic dermatitis?",opts:["IL-4","IL-6","IL-13","IL-17"],ans:2,exp:"Ebglyss (lebrikizumab) specifically targets IL-13, a key cytokine driving inflammation in atopic dermatitis."},
+  {q:"Lilly sells its products in approximately how many countries around the world?",opts:["50","75","100","125"],ans:3,exp:"Eli Lilly sells its products in approximately 125 countries worldwide, demonstrating its extensive global reach."},
+  {q:"Which of the following is NOT one of the companies Lilly agreed to acquire in its Infectious Disease Push?",opts:["Curevo","LimmaTech Biologics","Vaccine Company","Biopharma Shield"],ans:3,exp:"Biopharma Shield was not part of Lilly's infectious disease acquisition strategy. Lilly acquired Curevo, LimmaTech Biologics, and Vaccine Company."},
+  {q:"What is the primary purpose of Lilly's newly opened Lebanon Advanced Therapies Manufacturing Site (ATMS)?",opts:["Producing small-molecule APIs and oral solid dosage forms at commercial scale","Manufacturing genetic medicines for both clinical and commercial production","Serving as a global distribution hub for Lilly's existing biologics portfolio","Conducting late-phase clinical trials for advanced therapies"],ans:1,exp:"The Lebanon ATMS was purpose-built for manufacturing genetic medicines, supporting both clinical and commercial production of advanced therapies."},
+  {q:"Eli Lilly has initiated Phase 3 clinical trials for eloralintide, a new once-weekly selective receptor agonist, aimed at treating which condition?",opts:["Advanced breast cancer","Severe asthma","Long-term weight management","Type 1 diabetes"],ans:2,exp:"Eloralintide is being investigated in Phase 3 trials for long-term weight management as a once-weekly selective receptor agonist."},
+  {q:"In one word, what makes Orforglipron different from semaglutide?",opts:["Peptide","Injectable","Non-peptide","Biologic"],ans:2,exp:"Orforglipron is a non-peptide GLP-1 receptor agonist, unlike semaglutide which is a peptide-based molecule, making it orally bioavailable."},
+  {q:"Which Novo Nordisk next-generation obesity combination therapy was submitted to the FDA in December 2025?",opts:["Wegovy","Rybelsus","Awiqli","CagriSema"],ans:3,exp:"CagriSema, Novo Nordisk's combination of cagrilintide and semaglutide, was submitted to the FDA in December 2025 as a next-generation obesity therapy."},
+  {q:"Which Sanofi and Regeneron blockbuster received FDA approval for multiple new indications in 2025?",opts:["Kevzara","Dupixent","Praluent","Libtayo"],ans:1,exp:"Dupixent (dupilumab) continued its remarkable expansion in 2025, receiving FDA approval for multiple new indications across various inflammatory conditions."}
+];
+const TOTAL=QS.length,TIME=45,PTS=100;
+const AVC=['#4f8ef7','#7c6af0','#00e676','#ff5252','#00d4ff','#f5a623','#a78bfa','#4caf50'];
+
+let roomCode='',isHost=false,pName='',uid='';
+let cur=0,sc=0,t0,answered=false,unsubRoom=null,timerT=null,timeLeft=0;
+let qStartTimes={};  // tracks when each question was shown
+let playerAnswerData={};  // {uid: {name, q0:{answered:true,time:5.2,correct:true}, ...}}
+
+function ini(n){return(n||'?').trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)||'?'}
+function fmtT(ms){if(!ms&&ms!==0)return'—';const s=(ms/1000).toFixed(1);return s+'s';}
+function fmtTRound(ms){if(!ms&&ms!==0)return'—';const s=Math.round(ms/1000);return s>=60?`${Math.floor(s/60)}m ${s%60}s`:`${s}s`}
+function avC(n){let h=0;for(const c of(n||''))h=(h*31+c.charCodeAt(0))%AVC.length;return AVC[h]}
+function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let r='';for(let i=0;i<6;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
+
+/* SCREENS */
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none';});const el=document.getElementById(id);if(el){el.classList.add('active');el.style.display='flex';}}
+window.goHome=function(){if(unsubRoom){unsubRoom();unsubRoom=null;}stopTimer();roomCode='';isHost=false;pName='';uid='';cur=0;sc=0;answered=false;qStartTimes={};playerAnswerData={};document.getElementById('host-box').style.display='none';document.getElementById('host-btn-main').style.display='flex';showScreen('lobby');}
+
+window.showHostBox=function(){document.getElementById('host-box').style.display='block';document.getElementById('host-btn-main').style.display='none';setTimeout(()=>document.getElementById('host-name').focus(),100);}
+
+window.confirmHost=async function(){
+  const nameEl=document.getElementById('host-name'),errEl=document.getElementById('host-name-err'),name=nameEl.value.trim();
+  if(!name){nameEl.classList.add('err');errEl.style.display='block';return;}
+  nameEl.classList.remove('err');errEl.style.display='none';
+  try{getACtx();}catch(e){}
+  pName=name;uid='u_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);isHost=true;roomCode=genCode();
+  const btn=document.getElementById('create-btn');btn.textContent='Creating…';btn.disabled=true;
+  await window._fb.createRoom(roomCode,{code:roomCode,started:false,hostUid:uid,currentQ:-1,qRevealed:false,createdAt:Date.now(),players:{[uid]:{uid,name:pName,score:0,qDone:0,done:false,elapsed:0,isHost:true,joinedAt:Date.now()}}});
+  btn.textContent='Create Room';btn.disabled=false;
+  document.getElementById('room-code-disp').textContent=roomCode;
+  document.getElementById('host-actions').style.display='block';
+  document.getElementById('joiner-actions').style.display='none';
+  showScreen('waiting');startRoomListener('waiting');
+}
+
+window.copyCode=function(){
+  const url=window.location.href.split('#')[0];
+  const txt=`💡 Join the GRA BLR Innovation Forum Quiz!\n\n1. Open: ${url}\n2. Enter your name\n3. Enter Room Code: ${roomCode}\n4. Click Join Game!\n\nSee you there! 🚀`;
+  navigator.clipboard.writeText(txt).then(()=>{const btn=document.querySelector('.copy-btn');btn.textContent='✅ Copied!';setTimeout(()=>btn.textContent='📋 Copy Code & Link',2500);}).catch(()=>prompt('Share:',`Room: ${roomCode} | URL: ${window.location.href}`));
+}
+
+window.joinGame=async function(){
+  const nameEl=document.getElementById('join-name'),codeEl=document.getElementById('join-code'),errEl=document.getElementById('join-err');
+  const name=nameEl.value.trim(),code=codeEl.value.trim().toUpperCase();
+  if(!name||code.length!==6){nameEl.classList.add('err');codeEl.classList.add('err');errEl.style.display='block';errEl.textContent='Please enter your name and a valid 6-letter room code.';return;}
+  nameEl.classList.remove('err');codeEl.classList.remove('err');errEl.style.display='none';
+  const btn=document.getElementById('join-btn-main');btn.textContent='🔍 Finding room…';btn.disabled=true;
+  try{getACtx();}catch(e){}
+  const room=await window._fb.getRoom(code);
+  if(!room){btn.textContent='🙋 Join Game';btn.disabled=false;errEl.textContent=`Room "${code}" not found. Check the code and try again.`;errEl.style.display='block';codeEl.classList.add('err');return;}
+  if(room.started&&room.currentQ>=TOTAL-1&&room.done){btn.textContent='🙋 Join Game';btn.disabled=false;errEl.textContent='This quiz has ended.';errEl.style.display='block';return;}
+  pName=name;uid='u_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);isHost=false;roomCode=code;
+  await window._fb.upPlayer(roomCode,uid,{uid,name:pName,score:0,qDone:0,done:false,elapsed:0,isHost:false,joinedAt:Date.now()});
+  btn.textContent='🙋 Join Game';btn.disabled=false;
+  document.getElementById('room-code-disp').textContent=roomCode;
+  document.getElementById('host-actions').style.display='none';
+  document.getElementById('joiner-actions').style.display='block';
+  document.getElementById('ptopbar-code').textContent=roomCode;
+  showScreen('waiting');startRoomListener('waiting');
+}
+
+/* ROOM LISTENER */
+function startRoomListener(screen){
+  if(unsubRoom){unsubRoom();unsubRoom=null;}
+  unsubRoom=window._fb.listenRoom(roomCode,room=>{
+    if(!room)return;
+    const players=room.players?Object.values(room.players):[];
+    if(screen==='waiting'){
+      renderWaitingPlayers(players);
+      if(!isHost&&room.started){
+        if(unsubRoom){unsubRoom();unsubRoom=null;}
+        if(room.currentQ>=0){
+          cur=room.currentQ;answered=false;t0=Date.now();
+          document.getElementById('ptopbar-code').textContent=roomCode;
+          startRoomListener('pquestion');showParticipantQ(room);
+        }
+      }
+    } else if(screen==='question'){
+      renderLB(players,'qlb');
+      updateAnsweredCount(players);
+    } else if(screen==='pquestion'){
+      renderLB(players,'pqlb');
+      updateAnsweredCount(players);
+      // check if host moved to next question
+      if(room.currentQ!==cur){
+        cur=room.currentQ;answered=false;
+        if(cur>=TOTAL){showResults();return;}
+        showParticipantQ(room);
+      }
+      // check if host revealed answer
+      if(room.qRevealed&&!answered){
+        // reveal on participant side too
+        revealOnParticipant();
+      }
+      // check if quiz done
+      if(room.done&&!isHost){showResults();}
+    } else if(screen==='results'){
+      renderFinalLB(players);
+    }
+  });
+}
+
+function renderWaitingPlayers(players){
+  const list=document.getElementById('player-list'),countEl=document.getElementById('player-count');
+  if(!list)return;countEl.textContent=`${players.length} joined`;list.innerHTML='';
+  players.sort((a,b)=>a.joinedAt-b.joinedAt).forEach(p=>{
+    const row=document.createElement('div');row.className='prow';
+    row.innerHTML=`<div class="pav" style="background:${avC(p.name)}">${ini(p.name)}</div><div class="pnm">${p.name}${p.uid===uid?' (you)':''}</div>${p.isHost?'<span class="host-tag">HOST</span>':'<span class="ready-tag">Ready ✓</span>'}`;
+    list.appendChild(row);
+  });
+  const hint=document.getElementById('wait-hint');if(hint)hint.textContent=players.length<2?'Waiting for participants… Share the room code!':players.length-1+' participant(s) joined. Start when ready!';
+}
+
+window.hostStartGame=async function(){
+  if(!isHost)return;
+  await window._fb.upRoom(roomCode,{started:true,currentQ:0,qRevealed:false,startedAt:Date.now()});
+  if(unsubRoom){unsubRoom();unsubRoom=null;}
+  cur=0;sc=0;answered=false;t0=Date.now();
+  document.getElementById('topbar-code').textContent=roomCode;
+  startRoomListener('question');
+  showHostQ();
+}
+
+/* HOST QUESTION */
+function showHostQ(){
+  showScreen('question');answered=false;
+  const q=QS[cur];buildDots();
+  document.getElementById('qcnt').textContent=`Q ${cur+1} of ${TOTAL}`;
+  document.getElementById('qtxt').textContent=q.q;
+  document.getElementById('expl').style.display='none';
+  document.getElementById('reveal-btn').disabled=false;
+  document.getElementById('next-btn').disabled=true;
+  const grid=document.getElementById('opts');grid.innerHTML='';
+  ['A','B','C','D'].forEach((L,i)=>{
+    const btn=document.createElement('button');btn.className='opt';
+    const lEl=document.createElement('span');lEl.className='oletter';lEl.textContent=L;
+    const tEl=document.createElement('span');tEl.className='otext';tEl.textContent=q.opts[i];
+    btn.appendChild(lEl);btn.appendChild(tEl);
+    // Host can click to see which option it is but doesn't score
+    btn.onclick=()=>{};
+    grid.appendChild(btn);
+  });
+  qStartTimes[cur]=Date.now();
+  startTimer();
+}
+
+window.hostReveal=async function(){
+  if(answered)return;
+  stopTimer();answered=true;
+  const q=QS[cur];
+  // highlight correct on host side
+  document.querySelectorAll('#opts .opt').forEach((b,i)=>{
+    b.style.cursor='default';
+    if(i===q.ans){b.classList.add('reveal');}else b.style.opacity='.3';
+  });
+  document.getElementById('expl').textContent=q.exp;document.getElementById('expl').style.display='block';
+  document.getElementById('reveal-btn').disabled=true;
+  document.getElementById('next-btn').disabled=false;
+  // signal to participants
+  await window._fb.upRoom(roomCode,{qRevealed:true});
+}
+
+window.hostNext=async function(){
+  const nextQ=cur+1;
+  if(nextQ>=TOTAL){
+    // quiz over
+    await window._fb.upRoom(roomCode,{done:true,currentQ:TOTAL});
+    showResults();
+    return;
+  }
+  cur=nextQ;answered=false;
+  await window._fb.upRoom(roomCode,{currentQ:nextQ,qRevealed:false});
+  showHostQ();
+}
+
+/* PARTICIPANT QUESTION */
+function showParticipantQ(room){
+  showScreen('pquestion');answered=false;
+  const q=QS[cur];
+  const mainEl=document.getElementById('pq-main');
+  mainEl.innerHTML='';
+  // dot progress
+  const dotRow=document.createElement('div');dotRow.className='dot-row';
+  for(let i=0;i<TOTAL;i++){const d=document.createElement('div');d.className='dp'+(i<cur?' done':i===cur?' current':'');dotRow.appendChild(d);}
+  mainEl.appendChild(dotRow);
+  // meta
+  const meta=document.createElement('div');meta.className='qmeta';
+  meta.innerHTML=`<span class="qcat">💡 Innovation</span><span class="qcnt">Q ${cur+1} of ${TOTAL}</span><span class="tnum ok" id="ptnum">30s</span>`;
+  mainEl.appendChild(meta);
+  // timer bar
+  const tbarOuter=document.createElement('div');tbarOuter.className='tbar-outer';tbarOuter.id='ptbar-outer';
+  tbarOuter.innerHTML=`<div class="tbar-track"><div class="tbar-fill" id="ptbar-fill" style="width:100%"></div></div><div class="tbar-icon" id="ptbar-icon" style="left:calc(100% - 20px)">💡</div>`;
+  mainEl.appendChild(tbarOuter);
+  // question
+  const qtxtEl=document.createElement('p');qtxtEl.className='qtxt';qtxtEl.textContent=q.q;mainEl.appendChild(qtxtEl);
+  // options
+  const optsEl=document.createElement('div');optsEl.className='opts';optsEl.id='popts';
+  ['A','B','C','D'].forEach((L,i)=>{
+    const btn=document.createElement('button');btn.className='opt';
+    const lEl=document.createElement('span');lEl.className='oletter';lEl.textContent=L;
+    const tEl=document.createElement('span');tEl.className='otext';tEl.textContent=q.opts[i];
+    btn.appendChild(lEl);btn.appendChild(tEl);
+    btn.onclick=()=>participantPick(i,q.ans,q.exp);
+    optsEl.appendChild(btn);
+  });
+  mainEl.appendChild(optsEl);
+  // explain placeholder
+  const explEl=document.createElement('div');explEl.className='expl';explEl.id='pexpl';mainEl.appendChild(explEl);
+  // score chip
+  const scoreEl=document.createElement('div');scoreEl.style.cssText='font-size:12px;color:var(--muted);margin-top:.5rem';
+  scoreEl.textContent=`Your score: ${sc}`;scoreEl.id='p-score-disp';mainEl.appendChild(scoreEl);
+  qStartTimes[cur]=Date.now();
+  startParticipantTimer();
+  // check if already revealed by host
+  if(room&&room.qRevealed){revealOnParticipant();}
+}
+
+function revealOnParticipant(){
+  if(answered)return;
+  stopTimer();answered=true;
+  const q=QS[cur];
+  document.querySelectorAll('#popts .opt').forEach((b,i)=>{
+    b.disabled=true;b.style.cursor='default';
+    if(i===q.ans)b.classList.add('reveal');else b.style.opacity='.28';
+  });
+  const pexpl=document.getElementById('pexpl');
+  if(pexpl){pexpl.textContent='The host revealed the answer. Wait for the next question…';pexpl.style.display='block';}
+}
+
+function participantPick(chosen,correct,exp){
+  if(answered)return;stopTimer();answered=true;
+  const elapsed=Date.now()-(qStartTimes[cur]||Date.now());
+  document.querySelectorAll('#popts .opt').forEach((b,i)=>{
+    b.disabled=true;b.style.cursor='default';
+    if(i===chosen&&chosen===correct)b.classList.add('correct');
+    else if(i===chosen&&chosen!==correct)b.classList.add('wrong');
+    else if(i===correct)b.classList.add('reveal');
+  });
+  const isCorrect=chosen===correct;
+  if(isCorrect){sc+=PTS;beep(true);}else beep(false);
+  const pexpl=document.getElementById('pexpl');
+  if(pexpl){pexpl.textContent=exp;pexpl.style.display='block';}
+  const psd=document.getElementById('p-score-disp');if(psd)psd.textContent=`Your score: ${sc}`;
+  // record answer data for excel
+  if(!playerAnswerData[uid])playerAnswerData[uid]={name:pName};
+  playerAnswerData[uid][`q${cur}`]={answered:true,correct:isCorrect,timeMs:elapsed,timeSec:(elapsed/1000).toFixed(1)};
+  window._fb.upPlayer(roomCode,uid,{score:sc,qDone:cur+1,elapsed:Date.now()-t0,[`q${cur}_time`]:elapsed,[`q${cur}_correct`]:isCorrect});
+}
+
+/* HOST TIMER */
+function startTimer(){
+  clearInterval(timerT);timeLeft=TIME;updateTimerUI('tnum','tbar-fill','tbar-icon');
+  timerT=setInterval(()=>{timeLeft--;updateTimerUI('tnum','tbar-fill','tbar-icon');if(timeLeft<=0){clearInterval(timerT);if(!answered)hostReveal();}},1000);
+}
+function startParticipantTimer(){
+  clearInterval(timerT);timeLeft=TIME;updateTimerUI('ptnum','ptbar-fill','ptbar-icon');
+  timerT=setInterval(()=>{timeLeft--;updateTimerUI('ptnum','ptbar-fill','ptbar-icon');if(timeLeft<=0){clearInterval(timerT);revealOnParticipant();}},1000);
+}
+function stopTimer(){clearInterval(timerT);}
+function updateTimerUI(tnumId,tbarId,iconId){
+  const tn=document.getElementById(tnumId),tb=document.getElementById(tbarId),ic=document.getElementById(iconId);
+  if(!tn||!tb)return;
+  const pct=(timeLeft/TIME)*100;tn.textContent=`${timeLeft}s`;tb.style.width=pct+'%';
+  if(ic){const outer=ic.parentElement;const trackW=outer?outer.offsetWidth:300;const iconLeft=Math.max(0,(pct/100)*trackW-20);ic.style.left=iconLeft+'px';}
+  if(timeLeft>15){tn.className='tnum ok';tb.className='tbar-fill';}
+  else if(timeLeft>8){tn.className='tnum warn';tb.className='tbar-fill warn';}
+  else{tn.className='tnum danger';tb.className='tbar-fill danger';}
+}
+
+/* LB RENDER */
+function sortP(p){return[...p].sort((a,b)=>{if((b.score||0)!==(a.score||0))return(b.score||0)-(a.score||0);return(a.elapsed||99999)-(b.elapsed||99999);});}
+function updateAnsweredCount(players){
+  const done=players.filter(r=>r.qDone>=(cur+1)).length;
+  const ac=document.getElementById('acnt');if(ac)ac.textContent=`${done}/${players.length} answered`;
+}
+function renderLB(players,cId){
+  const el=document.getElementById(cId);if(!el)return;const sorted=sortP(players);
+  if(!sorted.length){el.innerHTML=`<div style="text-align:center;padding:.75rem;font-size:12px;color:var(--dim)">No players yet</div>`;return;}
+  el.innerHTML='';
+  sorted.forEach((r,i)=>{
+    const isMe=r.uid===uid,rank=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+    const prog=r.done?`<span style="font-size:10px;color:var(--muted)">${fmtTRound(r.elapsed)}</span>`:`<span class="lb-prog">Q${r.qDone||0}/${TOTAL}</span>`;
+    const d=document.createElement('div');d.className='lb-row';
+    d.innerHTML=`<div class="lb-rank">${rank}</div><div class="lb-av" style="background:${avC(r.name)};color:#fff">${ini(r.name)}</div><div class="lb-name${isMe?' you':''}">${r.name}${isMe?' ★':''}</div>${prog}<div class="lb-score${(r.score||0)===0?' z':''}">${r.score||0}</div>`;
+    el.appendChild(d);
+  });
+}
+function renderFinalLB(players){
+  const el=document.getElementById('flb');if(!el)return;const sorted=sortP(players);
+  if(!sorted.length){el.innerHTML=`<div style="text-align:center;padding:.75rem;font-size:12px;color:var(--dim)">No data</div>`;return;}
+  el.innerHTML='';
+  sorted.forEach((r,i)=>{
+    const isMe=r.uid===uid,rank=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+    const d=document.createElement('div');d.className='flb-row';
+    d.innerHTML=`<div style="width:22px;text-align:center;font-size:13px">${rank}</div><div style="width:26px;height:26px;border-radius:50%;background:${avC(r.name)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${ini(r.name)}</div><div style="flex:1;font-size:13px;font-weight:500;color:${isMe?'var(--blue2)':'var(--text)'}">${r.name}${isMe?' (you)':''}</div><div style="text-align:right"><div style="font-size:14px;font-weight:800;color:var(--gold);font-family:'Sora',sans-serif">${r.score||0}</div><div style="font-size:10px;color:var(--muted)">${fmtTRound(r.elapsed)}</div></div>`;
+    el.appendChild(d);
+  });
+}
+
+/* DOTS */
+function buildDots(){const el=document.getElementById('dots');if(!el)return;el.innerHTML='';for(let i=0;i<TOTAL;i++){const d=document.createElement('div');d.className='dp'+(i<cur?' done':i===cur?' current':'');el.appendChild(d);}}
+
+/* RESULTS */
+async function showResults(){
+  stopTimer();
+  if(unsubRoom){unsubRoom();unsubRoom=null;}
+  if(isHost){
+    await window._fb.upRoom(roomCode,{done:true});
+  } else {
+    const elapsed=Date.now()-t0;
+    await window._fb.upPlayer(roomCode,uid,{score:sc,qDone:TOTAL,done:true,elapsed});
+  }
+  // fetch final room data
+  const room=await window._fb.getRoom(roomCode);
+  const players=room&&room.players?Object.values(room.players):[];
+  showScreen('results');
+  const maxScore=TOTAL*PTS,pct=Math.round((sc/maxScore)*100);
+  document.getElementById('rscore').textContent=sc;
+  document.getElementById('rname').textContent=pName;
+  document.getElementById('res-room-code').textContent=roomCode;
+  document.getElementById('rstats').innerHTML=`<div class="rstat"><div class="rsn">${sc}</div><div class="rsl">Score</div></div><div class="rstat"><div class="rsn">${pct}%</div><div class="rsl">Accuracy</div></div><div class="rstat"><div class="rsn">${fmtTRound(Date.now()-t0)}</div><div class="rsl">Time</div></div>`;
+  const vs=[[0,29,"Keep exploring — great innovation ideas are ahead! 🌱"],[30,59,"Good effort! Review the latest Lilly innovations 📚"],[60,79,"Nice work! Solid knowledge of pharma innovation ✅"],[80,99,"Impressive! A true innovation champion 🌟"],[100,100,"Perfect score! Outstanding pharma knowledge 🏆"]];
+  document.getElementById('rverdict').textContent=(vs.find(([lo,hi])=>pct>=lo&&pct<=hi)||vs[0])[2];
+  renderFinalLB(players);
+  // Excel button — HOST ONLY
+  if(isHost){
+    document.getElementById('excel-section').style.display='block';
+    // store players data for excel
+    window._excelPlayers=players;
+    window._excelRoom=room;
+  }
+  startRoomListener('results');
+  fanfare();setTimeout(fireworks,250);
+}
+
+/* EXCEL REPORT — HOST ONLY */
+window.downloadExcel=function(){
+  const players=window._excelPlayers||[];
+  const room=window._excelRoom||{};
+  // Build CSV content (downloads as .csv, opens in Excel)
+  const rows=[];
+  // Header row
+  const header=['Player Name','Total Score','Total Time'];
+  for(let i=0;i<TOTAL;i++){
+    header.push(`Q${i+1}: ${QS[i].q.substring(0,30)}… (Correct?)`);
+    header.push(`Q${i+1} Answer Time (sec)`);
+  }
+  rows.push(header);
+  // Sort by score
+  const sorted=[...players].sort((a,b)=>(b.score||0)-(a.score||0));
+  sorted.forEach(p=>{
+    if(p.isHost)return;
+    const row=[p.name,p.score||0,fmtTRound(p.elapsed)];
+    for(let i=0;i<TOTAL;i++){
+      const correct=p[`q${i}_correct`];
+      const timeMs=p[`q${i}_time`];
+      row.push(correct===true?'✓ Correct':correct===false?'✗ Wrong':'—');
+      row.push(timeMs?+(timeMs/1000).toFixed(1):'—');
+    }
+    rows.push(row);
+  });
+  // Convert to CSV
+  const csv=rows.map(r=>r.map(cell=>`"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const link=document.createElement('a');
+  link.href=URL.createObjectURL(blob);
+  link.download=`GRA_Innovation_Quiz_${roomCode}_Report.csv`;
+  link.click();
+}
+</script>
+</body>
+</html>
